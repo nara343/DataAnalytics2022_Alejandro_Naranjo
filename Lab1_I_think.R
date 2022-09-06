@@ -1,0 +1,18 @@
+#install.packages("ISLR")
+library("ISLR")
+data(Auto)
+head(Auto)
+names(Auto)
+summary(Auto)
+summary(Auto$mpg)
+fivenum(Auto$mpg)
+hist(Auto$mpg)
+mean(Auto$weight)
+median(Auto$horsepower)
+boxplot(Auto$mpg)
+str(Auto)
+
+data1 <- read.csv("C:/Users/Naran/Downloads/EPI_Data.csv", header= TRUE)
+data1
+head(data1)
+View(data1)
