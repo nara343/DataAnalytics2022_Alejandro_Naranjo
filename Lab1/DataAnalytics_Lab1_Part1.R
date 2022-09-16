@@ -84,7 +84,7 @@ qqplot(EPI,BIODIVERSITY, main="EPI vs BIODIVERSITY", xlab="EPI", ylab="BIODIVERS
 #### Exercie 2 - Filtering ####
 EPILand <- EPI[!Landlock]
 Eland <- EPILand[!is.na(EPILand)]
-par(mar=c(1,1,1,1))
+par(mar=c(0,0,0,0))
 hist(Eland)
 hist(Eland,seq(30.,95.,1.0), prob=TRUE)
 lines(density(EPILand,na.rm=TRUE,bw=1))
