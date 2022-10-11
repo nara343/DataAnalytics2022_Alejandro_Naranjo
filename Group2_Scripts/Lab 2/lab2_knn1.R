@@ -1,5 +1,10 @@
 # read data in
-nyt1<-read.csv(“nyt1.csv")
+nyt1<-read.csv("nyt1.csv", header=TRUE)
+
+#Checking the statistics of file 
+summary(nyt1)
+sum(is.na(nyt1))
+
 # eliminate zeros
 nyt1<-nyt1[which(nyt1$Impressions>0 & nyt1$Clicks>0 & nyt1$Age>0),]
 ## or could just have this: nyt1<-nyt1[which(nyt1$Impressions>0 & nyt1$Age>0),]
@@ -21,6 +26,7 @@ cg<-nyt1$Gender[training]
 #construct true labels the other variable in the test set
 true.labels<-nyt1$Gender[testing]
 #run the classifier, can change k
+library("class")
 classif<-knn(train,test,cg,k=5)
 #view the classifier
 classif
