@@ -1,3 +1,8 @@
+library(gdata) 
+
+# In this section we are going to be doing the same for data processing we need
+# To have numerical values and we are using regex to find the character to remove 
+# Then replace it with an empty string "" 
 bronx1$SALE.PRICE<-sub("\\$","",bronx1$SALE.PRICE) 
 bronx1$SALE.PRICE<-as.numeric(gsub(",","", bronx1$SALE.PRICE)) 
 bronx1$GROSS.SQUARE.FEET<-as.numeric(gsub(",","", bronx1$GROSS.SQUARE.FEET)) 
@@ -6,19 +11,28 @@ bronx1$SALE.DATE<- as.Date(gsub("[^]:digit:]]","",bronx1$SALE.DATE))
 bronx1$YEAR.BUILT<- as.numeric(gsub("[^]:digit:]]","",bronx1$YEAR.BUILT)) 
 bronx1$ZIP.CODE<- as.character(gsub("[^]:digit:]]","",bronx1$ZIP.CODE)) 
 
+# We are filtering out any data that is below our minimum price of $10,000
 minprice<-10000
 bronx1<-bronx1[which(bronx1$SALE.PRICE>=minprice),]
 nval<-dim(bronx1)[1]
 
-bronx1$ADDRESSONLY<- gsub("[,][[:print:]]*","",gsub("[ ]+","",trim(bronx1$ADDRESS))) bronxadd<-unique(data.frame(bronx1$ADDRESSONLY, bronx1$ZIP.CODE,stringsAsFactors=FALSE)) names(bronxadd)<-c("ADDRESSONLY","ZIP.CODE") bronxadd<-bronxadd[order(bronxadd$ADDRESSONLY),] duplicates<-duplicated(bronx1$ADDRESSONLY)
+# Trimming the Address
+bronx1$ADDRESSONLY<- gsub("[,][[:print:]]*","",gsub("[ ]+","",trim(bronx1$ADDRESS))) 
+bronxadd<-unique(data.frame(bronx1$ADDRESSONLY, bronx1$ZIP.CODE,stringsAsFactors=FALSE)) 
+names(bronxadd)<-c("ADDRESSONLY","ZIP.CODE") 
+bronxadd<-bronxadd[order(bronxadd$ADDRESSONLY),] 
+#Finding the dupliactes
+duplicates<-duplicated(bronx1$ADDRESSONLY)
 
 for(i in 1:2345) {
 if(duplicates[i]==FALSE) dupadd<-bronxadd[bronxadd$duplicates,1]
-}#what are we doing with dupadd?
-
+}
+#what are we doing with dupadd?
+# We are looking for the address that were only shown once and keeping track of it .
 nsample=450
 
-addsample<-bronxadd[sample.int(dim(bronxadd),size=nsample),]#I use nval here 
+install.packages("ggmap")
+addsample<-bronxadd[sample.int(dim(bronxadd)[1],size=nsample),]#I use nval here 
 # may need to install this package
 library(ggmap)
 addrlist<-paste(addsample$ADDRESSONLY, "NY", addsample$ZIP.CODE, "US", sep=" ") 
