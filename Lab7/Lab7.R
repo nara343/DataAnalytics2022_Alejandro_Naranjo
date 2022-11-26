@@ -1,18 +1,21 @@
-
-
 data("Titanic")
 
 df <- data.frame(Titanic)
+df
+
+new_df <- data.frame()
+for (n in 1:nrow(df)) {
+  for (x in 1:df[n, 5]) {
+    new_df <- rbind(new_df, df[n, 1:4])
+  }
+}
 
 library(rpart)
 library(rpart.plot)
 
-#Splitting the data into train/test
-sample <- sample(c(TRUE, FALSE), nrow(df), replace=TRUE, prob=c(0.7,0.3))
-train  <- df[sample, ]
-test   <- df[!sample, ]
-train
-decisionTreeModel <- rpart(Survived~.,df)
+
+decisionTreeModel <- rpart(Survived~.,new_df)
+
 rpart.plot(decisionTreeModel)
 install.packages("party")
 library("party")
