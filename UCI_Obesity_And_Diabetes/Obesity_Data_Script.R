@@ -50,7 +50,7 @@ Freq_female <- nrow(obesity_data[obesity_data$Gender == "Female",])
 Frequency_by_Gender <- data.frame(Sex = c("Male","Female"),
                                   Freq = c(Freq_male, Freq_female))
 
-                                   
+#Plot of the age frequency                                 
 Age_Fre <- ggplot(Frequency_by_Gender, aes(x = Sex, y = Freq, fill=Sex)) + 
   geom_bar(stat="identity") + 
   geom_text(aes(label = Freq), vjust = -0.4) + 
@@ -59,7 +59,8 @@ Age_Fre <- ggplot(Frequency_by_Gender, aes(x = Sex, y = Freq, fill=Sex)) +
   labs(title = "Counting the distribution of Male and Female")
 
 Age_Fre 
-  
+
+# Distribution of Age
 ggplot(obesity_data, aes(x = Age)) +
   stat_bin(binwidth=1)+  
   stat_bin(binwidth=1, geom="text", aes(label=..count..), vjust=-1.5)+
@@ -67,20 +68,26 @@ ggplot(obesity_data, aes(x = Age)) +
   ylab(" Count ") +
   labs(title = "Age Distribution")
 
+# Distribution of Category
 ggplot(obesity_data, aes(x = NObeyesdad,fill= NObeyesdad, label=..count..)) +
   geom_histogram(stat="count")+
   xlab(" Category ") + 
   ylab(" Count ") +
   labs(title = "Destibution of Dependent Feature (NOBeyesdad)")
 
+# Distribution of weight
 ggplot(obesity_data, aes(x = Weight)) +
   geom_histogram(binwidth = 3)+
   xlab(" Weight ") + 
   ylab(" Count ") +
   labs(title = "Weight Distribution (Binsize = 3")
 
+# Scatter plot of Age and Weight
 
 # Using a clustering Algorithm this requires chaning the categorical data
+# Logestic Regression
+# Decision Tree
+
 # To numeric values. The categories will be changed accordingly 
 
 catergorical_data_to_numeric <- data.frame(data.matrix(obesity_data[1:16]))
