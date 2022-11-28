@@ -1,5 +1,3 @@
-
-
 setwd("C:/Users/Naran/DataAnalytics2022_Alejandro_Naranjo/UCI_Obesity_And_Diabetes/Diabetes datasets")
 
 diabetic_data <- read.csv("diabetic_data.csv")
@@ -109,8 +107,19 @@ admission_distrubition_w_insulin_level <-ggplot(diabetic_data, aes(x = admission
 
 admission_distrubition_w_insulin_level
 
+#Distribution of A1Cresult including information about if re-admited
 
+library(ggrepel)
+unique(diabetic_data$A1Cresult)
+unique(diabetic_data$readmitted)
 
+ALCResult_Distribution <- ggplot(diabetic_data, aes(x = A1Cresult, fill = readmitted, label = ..count..)) +
+  stat_count(binwidth = 1) +
+  stat_count(binwidth=1, geom="text", aes(label=..count..), vjust=1, size = 2.75)+
+  xlab("A1Cresult") +
+  ylab("Count") +
+  ggtitle("A1Cresult Distribution Filled by Readmitted Results")
 
-#Distribution of the dismisal code
+ALCResult_Distribution
+
 #Distribution of readmited
