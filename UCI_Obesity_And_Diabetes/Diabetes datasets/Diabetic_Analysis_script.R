@@ -4,6 +4,7 @@ diabetic_data <- read.csv("diabetic_data.csv")
 
 
 library(ggplot2)
+library(ggcorrplot)
 #Scatter plot between admission and discharge
 colnames(diabetic_data)
 # "encounter_id"             "patient_nbr"              "race"                    
@@ -24,6 +25,15 @@ colnames(diabetic_data)
 # [46] "metformin.rosiglitazone"  "metformin.pioglitazone"   "change"                  
 # [49] "diabetesMed"              "readmitted"            
 
+# Corelation Matrix only numeric values 
+numeric_names <- !(unlist(lapply(diabetic_data, is.character), use.names = FALSE))
+numeric_df <- diabetic_data[, numeric_names]
+cor_matrix <- round(cor(numeric_df),3)
+
+ggcorrplot(cor_matrix, hc.order = TRUE, type = "lower", lab =TRUE) + 
+  ggtitle("Correlation Matrix Only For Numeric Features")
+
+#Scatter plot of admissions
 scatter_admission_discharge <- ggplot(diabetic_data, 
                                       aes(x = admission_type_id, discharge_disposition_id)) +
   geom_point(aes(color = gender, shape=gender), size = 3) +
@@ -160,13 +170,105 @@ linear_regression_data <- diabetic_data[-c(1:3,6,11:12, 19:21, 25:47 )]
 
 linear_regression_data <- data.frame(data.matrix(linear_regression_data))
 
+# Checking the Correlation of the Variable now that we have made it all numeric
+
+
+cor_matrix <- round(cor(linear_regression_data),3)
+ggcorrplot(cor_matrix, type = "lower", hc.order = TRUE, lab = TRUE) + 
+  ggtitle("Correlation Matrix After Transforming Data")
+
+View(cor_matrix)
 # Using a Linear Regression Model 
 lm.fit <- lm(readmitted~., linear_regression_data)
 
 summary(lm.fit)
 
-# Retraining and removing A1CResult as it isn't significant
-linear_regression_data_remove_A1CResult <- linear_regression_data[-c(15)]
+# Call:
+#   lm(formula = readmitted ~ ., data = linear_regression_data)
+# 
+# Residuals:
+#   Min      1Q  Median      3Q     Max 
+# -1.7490 -0.4601  0.3717  0.5244  2.4964 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)               2.879e+00  3.156e-02  91.220  < 2e-16 ***
+#   gender                    9.486e-03  4.172e-03   2.274 0.022982 *  
+#   age                      -9.704e-03  1.366e-03  -7.105 1.21e-12 ***
+#   admission_type_id        -5.317e-03  1.507e-03  -3.528 0.000418 ***
+#   discharge_disposition_id  5.423e-05  4.019e-04   0.135 0.892659    
+# admission_source_id      -1.523e-03  5.252e-04  -2.899 0.003744 ** 
+#   time_in_hospital         -5.003e-03  8.203e-04  -6.099 1.07e-09 ***
+#   num_lab_procedures       -4.176e-04  1.151e-04  -3.629 0.000285 ***
+#   num_procedures            1.349e-02  1.358e-03   9.940  < 2e-16 ***
+#   num_medications          -6.630e-04  3.292e-04  -2.014 0.044017 *  
+#   number_outpatient        -1.806e-02  1.656e-03 -10.905  < 2e-16 ***
+#   number_emergency         -2.928e-02  2.329e-03 -12.572  < 2e-16 ***
+#   number_inpatient         -1.127e-01  1.727e-03 -65.273  < 2e-16 ***
+#   number_diagnoses         -2.315e-02  1.176e-03 -19.681  < 2e-16 ***
+#   max_glu_serum             7.872e-03  6.747e-03   1.167 0.243271    
+# A1Cresult                -7.469e-06  4.049e-03  -0.002 0.998528    
+# change                    7.564e-03  4.919e-03   1.538 0.124149    
+# diabetesMed              -7.012e-02  5.737e-03 -12.222  < 2e-16 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Residual standard error: 0.6601 on 101748 degrees of freedom
+# Multiple R-squared:  0.06913,	Adjusted R-squared:  0.06898 
+# F-statistic: 444.5 on 17 and 101748 DF,  p-value: < 2.2e-16
+
+
+# Retraining and removing the non significant features:
+#   Discharge_diposition_id
+#   A1CResult
+#   Change
+#   max_glu_serum
+# I believed these would be statistically significant but I was wrong 
+
+linear_regression_data_remove_A1CResult <- linear_regression_data[-c(4, 14:16)]
 lm.fit2 <- lm(readmitted~., linear_regression_data_remove_A1CResult)
 
 summary(lm.fit2)
+
+# Call:
+#   lm(formula = readmitted ~ ., data = linear_regression_data_remove_A1CResult)
+# 
+# Residuals:
+#   Min      1Q  Median      3Q     Max 
+# -1.7506 -0.4597  0.3718  0.5245  2.4870 
+# 
+# Coefficients:
+#   Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)          2.9236195  0.0165018 177.170  < 2e-16 ***
+#   gender               0.0093726  0.0041709   2.247 0.024634 *  
+#   age                 -0.0095916  0.0013565  -7.071 1.55e-12 ***
+#   admission_type_id   -0.0054517  0.0014968  -3.642 0.000270 ***
+#   admission_source_id -0.0015739  0.0005235  -3.006 0.002644 ** 
+#   time_in_hospital    -0.0050393  0.0008135  -6.195 5.86e-10 ***
+#   num_lab_procedures  -0.0004155  0.0001142  -3.637 0.000276 ***
+#   num_procedures       0.0136725  0.0013529  10.106  < 2e-16 ***
+#   num_medications     -0.0007487  0.0003241  -2.310 0.020877 *  
+#   number_outpatient   -0.0180946  0.0016561 -10.926  < 2e-16 ***
+#   number_emergency    -0.0293865  0.0023278 -12.624  < 2e-16 ***
+#   number_inpatient    -0.1126838  0.0017255 -65.306  < 2e-16 ***
+#   number_diagnoses    -0.0231508  0.0011759 -19.688  < 2e-16 ***
+#   diabetesMed         -0.0745495  0.0050338 -14.810  < 2e-16 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Residual standard error: 0.6601 on 101752 degrees of freedom
+# Multiple R-squared:  0.0691,	Adjusted R-squared:  0.06898 
+# F-statistic:   581 on 13 and 101752 DF,  p-value: < 2.2e-16
+
+#### BUilding a linear Classification Model #### 
+
+# Comparing between a regression model and a classification model
+
+glm.fit <- glm(readmitted~., linear_regression_data, family=gaussian)
+summary(glm.fit)
+
+
+#### Comparing To A Decision Tree ####
+
+
+
