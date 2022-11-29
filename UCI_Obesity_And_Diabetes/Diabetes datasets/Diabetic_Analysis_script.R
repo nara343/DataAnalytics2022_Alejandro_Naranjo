@@ -150,6 +150,7 @@ remove_nas <- function(df, Null) {
   }
   return(info)
 }
+
 find_nas <- remove_nas(diabetic_data, "?")
 #Values which stand out
 
@@ -158,6 +159,7 @@ find_nas <- remove_nas(diabetic_data, "?")
 # medical_specialty 	 49949 
  
 linear_regression_data <- diabetic_data[-c(1:3,6,11:12, 19:21, 25:47 )]
+logistic_regression_data <- diabetic_data[-c(1:3,6,11:12, 19:21, 25:47 )]
 
 # Now we need to tranform the data to all numeric values
 # Female -> 1, Male -> 2
@@ -207,9 +209,9 @@ summary(lm.fit)
 #   number_inpatient         -1.127e-01  1.727e-03 -65.273  < 2e-16 ***
 #   number_diagnoses         -2.315e-02  1.176e-03 -19.681  < 2e-16 ***
 #   max_glu_serum             7.872e-03  6.747e-03   1.167 0.243271    
-# A1Cresult                -7.469e-06  4.049e-03  -0.002 0.998528    
-# change                    7.564e-03  4.919e-03   1.538 0.124149    
-# diabetesMed              -7.012e-02  5.737e-03 -12.222  < 2e-16 ***
+#   A1Cresult                -7.469e-06  4.049e-03  -0.002 0.998528    
+#   change                    7.564e-03  4.919e-03   1.538 0.124149    
+#   diabetesMed              -7.012e-02  5.737e-03 -12.222  < 2e-16 ***
 #   ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
@@ -225,6 +227,7 @@ summary(lm.fit)
 #   max_glu_serum
 # I believed these would be statistically significant but I was wrong 
 
+# Removing the data that isn't statistically significant 
 linear_regression_data_remove_A1CResult <- linear_regression_data[-c(4, 14:16)]
 lm.fit2 <- lm(readmitted~., linear_regression_data_remove_A1CResult)
 
@@ -261,14 +264,90 @@ summary(lm.fit2)
 # F-statistic:   581 on 13 and 101752 DF,  p-value: < 2.2e-16
 
 #### BUilding a linear Classification Model #### 
+# With the logistic Regression we don't have to change the categorical information
+# And we can leave it as is. 
+# For this model we're focuing on two different types of readmissions, those 
+# greater than 30 days and No re-admission at all
+library(caret)
+logistic_data <- linear_regression_data[linear_regression_data$readmitted != 1, ]
+logistic_data$readmitted <- as.factor(logistic_data$readmitted)
+Train <- createDataPartition(logistic_data$readmitted, p = 0.7, list = FALSE)
 
-# Comparing between a regression model and a classification model
+training <- logistic_data[ Train, ]
+testing <- logistic_data[ - Train, ]
 
-glm.fit <- glm(readmitted~., linear_regression_data, family=gaussian)
+glm.fit <- glm(readmitted~., training,family=binomial(link = "logit"))
 summary(glm.fit)
 
+# Call:
+#   glm(formula = readmitted ~ ., family = binomial, data = training)
+# 
+# Deviance Residuals: 
+#   Min       1Q   Median       3Q      Max  
+# -1.9988  -1.2770   0.8122   0.9651   3.7338  
+# 
+# Coefficients:
+#   Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)               1.7522808  0.1281664  13.672  < 2e-16 ***
+#   gender                    0.0646384  0.0169741   3.808 0.000140 ***
+#   age                      -0.0202088  0.0056154  -3.599 0.000320 ***
+#   admission_type_id        -0.0321101  0.0061176  -5.249 1.53e-07 ***
+#   discharge_disposition_id  0.0242230  0.0017527  13.821  < 2e-16 ***
+#   admission_source_id      -0.0074656  0.0021230  -3.516 0.000437 ***
+#   time_in_hospital         -0.0138596  0.0033162  -4.179 2.92e-05 ***
+#   num_lab_procedures       -0.0017410  0.0004653  -3.742 0.000183 ***
+#   num_procedures            0.0458554  0.0055539   8.257  < 2e-16 ***
+#   num_medications           0.0004544  0.0013415   0.339 0.734805    
+# number_outpatient        -0.0823072  0.0073859 -11.144  < 2e-16 ***
+#   number_emergency         -0.2026468  0.0152208 -13.314  < 2e-16 ***
+#   number_inpatient         -0.3434939  0.0088250 -38.923  < 2e-16 ***
+#   number_diagnoses         -0.0881494  0.0048598 -18.139  < 2e-16 ***
+#   max_glu_serum             0.0171613  0.0271854   0.631 0.527864    
+# A1Cresult                 0.0084542  0.0162419   0.521 0.602702    
+# change                    0.0360218  0.0198937   1.811 0.070186 .  
+# diabetesMed              -0.2230905  0.0235512  -9.473  < 2e-16 ***
+#   ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# (Dispersion parameter for binomial family taken to be 1)
+# 
+# Null deviance: 84822  on 63286  degrees of freedom
+# Residual deviance: 80690  on 63269  degrees of freedom
+# AIC: 80726
+# 
+# Number of Fisher Scoring iterations: 4
+
+
+pred <- predict(glm.fit, newdata = testing, type="response")
+pred.class <- ifelse(pred >0.5 , 3, 2)
+
+accuracy_logistic_model <- table(pred.class, testing[,"readmitted"])
+accuracy_logistic_model
+sum(diag(accuracy_logistic_model))/sum(accuracy_logistic_model)
+
+#ACcuracy of ~64%
 
 #### Comparing To A Decision Tree ####
+library(caret)
+library(randomForest)
+rn_data <- diabetic_data[-c(1:3,6,11:12, 19:21, 25:47 )]
 
+Train <- createDataPartition(rn_data$readmitted, p = 0.5, list = FALSE)
 
+training <- logistic_data[ Train, ]
+testing <- logistic_data[ - Train, ]
+
+set.seed(123)
+
+random_forest <- randomForest(readmitted~., 
+                              data = training, 
+                              ntree = 50,
+                              importance =TRUE,
+                              na.action=na.exclude)
+
+pred_w_random <- predict(random_forest, testing, type = "class")
+tableCheck <- table(pred_w_random, testing$readmitted)
+sum(diag(tableCheck))/sum(tableCheck)
+
+#Accuracy of 0.6439493
 
