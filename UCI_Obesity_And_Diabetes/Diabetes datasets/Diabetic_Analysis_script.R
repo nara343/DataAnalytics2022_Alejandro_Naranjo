@@ -109,7 +109,6 @@ admission_distrubition_w_insulin_level
 
 #Distribution of A1Cresult including information about if re-admited
 
-library(ggrepel)
 unique(diabetic_data$A1Cresult)
 unique(diabetic_data$readmitted)
 
@@ -122,4 +121,52 @@ ALCResult_Distribution <- ggplot(diabetic_data, aes(x = A1Cresult, fill = readmi
 
 ALCResult_Distribution
 
-#Distribution of readmited
+#### Model building: Linear Regression ####
+
+# For this Model we are only going to be focusing on certain features
+# We will be predicting if a patient is re-admitted after having gone to the hopital
+# We will be removing information about their medicine and the type of diagnosis 
+# Race will also be dropped there is a dominant number of Caucasian patients and 
+# might affect the results 
+
+#Cleaning the data
+
+remove_nas <- function(df, Null) {
+  totalRows <- nrow(df)
+  print(totalRows)
+  for ( i in colnames(df) ){
+    found = nrow(df[df[[i]] == Null, ])
+    cat(i, "\t",found,"\n")
+  }
+  return(info)
+}
+find_nas <- remove_nas(diabetic_data, "?")
+#Values which stand out
+
+# weight 	 98569 
+# payer_code 	 40256 
+# medical_specialty 	 49949 
+ 
+linear_regression_data <- diabetic_data[-c(1:3,6,11:12, 19:21, 25:47 )]
+
+# Now we need to tranform the data to all numeric values
+# Female -> 1, Male -> 2
+# [0-10) -> 1 ... [90,100) -> 10
+# A1CResult: >7 -> 1, >8 -> 2, None -> 3, Norm -> 4
+# max_glu_serum: >200 -> 1 , >300 -> 2 , normal -> 4, none -> 3
+# Change: No -> 2, Ch -> 1
+# diabetesMed: Yes -> 2, No -> 1 
+# Readmitted: >30 -> 2, <30 -> 1, NO->3 
+
+linear_regression_data <- data.frame(data.matrix(linear_regression_data))
+
+# Using a Linear Regression Model 
+lm.fit <- lm(readmitted~., linear_regression_data)
+
+summary(lm.fit)
+
+# Retraining and removing A1CResult as it isn't significant
+linear_regression_data_remove_A1CResult <- linear_regression_data[-c(15)]
+lm.fit2 <- lm(readmitted~., linear_regression_data_remove_A1CResult)
+
+summary(lm.fit2)
