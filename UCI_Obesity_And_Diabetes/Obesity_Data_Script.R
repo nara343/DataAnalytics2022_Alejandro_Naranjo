@@ -252,13 +252,19 @@ obesity_gender_cluster
 # Results # 
 table <- table(obesity_data$NObeyesdad, obesity_gender_cluster$cluster)
 table
-# 1   2
-# Female 729 314
-# Male   433 635
+# 1   2   3   4   5   6   7
+# Insufficient_Weight  37   0  82   0   0 153   0
+# Normal_Weight        74   0 104  30   0  79   0
+# Obesity_Type_I       23   0  50 138 110   0  30
+# Obesity_Type_II       0   0   0   0 235   0  62
+# Obesity_Type_III      0 135   0   0   0   0 189
+# Overweight_Level_I  100   0  75 115   0   0   0
+# Overweight_Level_II  84   0  40 151  15   0   0
+
 #Clustering Accuracy 
 sum(diag(table))/sum(table)
-# 0.6461393
-
+# 0.0412127
+sn
 library(cluster)
 
 clusplot(obesity_data, obesity_gender_cluster$cluster, color=T, shade=T, labels=0, lines=0)
@@ -293,6 +299,7 @@ random_forest <- randomForest(as.factor(NObeyesdad)~.,
                               ntree = 50,
                               importance =TRUE,
                               na.action=na.exclude)
+plot(random_forest)
 
 pred_w_random <- predict(random_forest, testing, type = "class")
 tableCheck <- table(pred_w_random, testing$NObeyesdad)
